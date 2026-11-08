@@ -1,0 +1,5 @@
+bin/
+*.exe
+*.pdb
+mac/build/
+.DS_Store

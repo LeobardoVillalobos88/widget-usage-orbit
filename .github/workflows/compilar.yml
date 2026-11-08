@@ -1,0 +1,26 @@
+# Compila el widget en Windows y en macOS con cada cambio, y corre las pruebas de Windows.
+name: Compilar
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar
+        shell: cmd
+        run: windows\build.cmd
+      - name: Pruebas
+        shell: cmd
+        run: windows\Tests\run-tests.cmd
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar
+        run: bash mac/build.sh
