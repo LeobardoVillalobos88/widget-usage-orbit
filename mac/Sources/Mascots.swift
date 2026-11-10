@@ -4,10 +4,10 @@ import AppKit
 enum Mascots {
     static let riseSteps = 4
     static let workFrames = 16
-    private static let colors: [Character: NSColor] = [
-        "O": color(0xEE7B30), "D": color(0xC25E20), "k": color(0x1C1A1E),
-        "#": color(0x232D66), "b": color(0x6E9BFA), "d": color(0x4A6FD0), "c": color(0x8FE6FF),
-        "M": color(0x6F7786), "L": color(0xAEB6C2), "B": color(0x4E5563), "g": color(0xEAF1FF), "G": color(0xB9D4FF)
+    private static let colors: [Character: UInt32] = [
+        "O": 0xEE7B30, "D": 0xC25E20, "k": 0x1C1A1E,
+        "#": 0x232D66, "b": 0x6E9BFA, "d": 0x4A6FD0, "c": 0x8FE6FF,
+        "M": 0x6F7786, "L": 0xAEB6C2, "B": 0x4E5563, "g": 0xEAF1FF, "G": 0xB9D4FF
     ]
     private static let codexBody = [
         "........#######........",
@@ -130,7 +130,19 @@ enum Mascots {
         let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size,
                                       bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
                                       colorSpaceName: .deviceRGB, bytesPerRow: size * 4, bitsPerPixel: 32)!
-        for y in 0..<size { for x in 0..<size { bitmap.setColor(colors[canvas[y / 4][x / 4]] ?? .clear, atX: x, y: y) } }
+        // Se escriben los bytes RGBA directamente: setColor no convierte colores de otro espacio de color
+        // al del bitmap y los dejaría transparentes. Los píxeles vacíos se ponen en cero de forma explícita.
+        let data = bitmap.bitmapData!
+        for y in 0..<size {
+            for x in 0..<size {
+                let offset = y * bitmap.bytesPerRow + x * 4
+                let rgb = colors[canvas[y / 4][x / 4]]
+                data[offset] = UInt8(((rgb ?? 0) >> 16) & 255)
+                data[offset + 1] = UInt8(((rgb ?? 0) >> 8) & 255)
+                data[offset + 2] = UInt8((rgb ?? 0) & 255)
+                data[offset + 3] = rgb == nil ? 0 : 255
+            }
+        }
         let image = NSImage(size: NSSize(width: size, height: size)); image.addRepresentation(bitmap); return image
     }
 }
